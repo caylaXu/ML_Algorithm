@@ -48,8 +48,8 @@ def classify0(inX, dataSet, labels, k):
     print(sortedClassCount)
     return sortedClassCount[0][0]
 
+
 if __name__ == '__main__':
     group, labels = createDataSet()
     result = classify0([0, 0], group, labels, 3)
     print(result)
-
