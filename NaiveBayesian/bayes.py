@@ -108,18 +108,50 @@ def trainNBO(trainMatrix, trainCategory):
     p0Vect = log(p0Num / p0Denom)
     return p0Vect, p1Vect, pAbusive
 
-def classifyNB(vec2Classify, p0Vec,p1Vec,pClass1):
-    p1 = sum(vec2Classify * p1Vec) + log(pCLs)
+
+def classifyNB(vec2Classify, p0Vec, p1Vec, pClass1):
+    """
+    朴素贝叶斯分类函数
+    :param vec2Classify: 要分类的向量
+    :param p0Vec:
+    :param p1Vec:
+    :param pClass1:
+    :return:
+    """
+    # 1. 元素相乘
+    p1 = sum(vec2Classify * p1Vec) + log(pClass1)
+    p0 = sum(vec2Classify * p0Vec) + log(1.0 - pClass1)
+    if p1 > p0:
+        return 1
+    else:
+        return 0
 
 
-if __name__ == '__main__':
+def testingNB():
     listOPosts, listClasses = loadDataSet()
     myVocabList = createVocabList(listOPosts)
-
     trainMat = []
     for postingDoc in listOPosts:
         trainMat.append(setOfWords2Vec(myVocabList, postingDoc))
-    p0V, p1V, pAb = trainNBO(trainMat, listClasses)
-    print(pAb)
-    print(p0V)
-    print(p1V)
+    p0V, p1V, pAb = trainNBO(array(trainMat), array(listClasses))
+    testEntry = ['love', 'my', 'dalmation']
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print testEntry, 'classified as: ', classifyNB(thisDoc, p0V, p1V, pAb)
+    testEntry = ['stupid', 'garbage']
+    thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
+    print  testEntry, 'classified as: ', classifyNB((thisDoc, p0V, p1V))
+
+
+if __name__ == '__main__':
+    # listOPosts, listClasses = loadDataSet()
+    # myVocabList = createVocabList(listOPosts)
+    #
+    # trainMat = []
+    # for postingDoc in listOPosts:
+    #     trainMat.append(setOfWords2Vec(myVocabList, postingDoc))
+    # p0V, p1V, pAb = trainNBO(trainMat, listClasses)
+    # print(pAb)
+    # print(p0V)
+    # print(p1V)
+
+    testingNB()
