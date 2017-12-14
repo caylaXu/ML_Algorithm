@@ -52,7 +52,7 @@ def setOfWords2Vec(vocabList, inputSet):
     return returnVec
 
 
-# def trainNBO(trainMatrix, trainCategory):
+# def trainNB0(trainMatrix, trainCategory):
 #     """
 #     朴素贝叶斯分类器训练函数
 #     :param trainMatrix: 文档矩阵
@@ -80,7 +80,7 @@ def setOfWords2Vec(vocabList, inputSet):
 #     p0Vect = p0Num / p0Denom
 #     return p0Vect, p1Vect, pAbusive
 
-def trainNBO(trainMatrix, trainCategory):
+def trainNB0(trainMatrix, trainCategory):
     """
     根据现实情况修改分类器后的朴素贝叶斯分类器训练函数
     :param trainMatrix: 文档矩阵
@@ -133,13 +133,13 @@ def testingNB():
     trainMat = []
     for postingDoc in listOPosts:
         trainMat.append(setOfWords2Vec(myVocabList, postingDoc))
-    p0V, p1V, pAb = trainNBO(array(trainMat), array(listClasses))
+    p0V, p1V, pAb = trainNB0(array(trainMat), array(listClasses))
     testEntry = ['love', 'my', 'dalmation']
     thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
     print testEntry, 'classified as: ', classifyNB(thisDoc, p0V, p1V, pAb)
     testEntry = ['stupid', 'garbage']
     thisDoc = array(setOfWords2Vec(myVocabList, testEntry))
-    print  testEntry, 'classified as: ', classifyNB((thisDoc, p0V, p1V))
+    print  testEntry, 'classified as: ', classifyNB(thisDoc, p0V, p1V, pAb)
 
 
 if __name__ == '__main__':
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # trainMat = []
     # for postingDoc in listOPosts:
     #     trainMat.append(setOfWords2Vec(myVocabList, postingDoc))
-    # p0V, p1V, pAb = trainNBO(trainMat, listClasses)
+    # p0V, p1V, pAb = trainNB0(trainMat, listClasses)
     # print(pAb)
     # print(p0V)
     # print(p1V)

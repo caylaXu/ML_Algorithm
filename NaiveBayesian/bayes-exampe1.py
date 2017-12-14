@@ -10,6 +10,8 @@
 
 import re
 import bayes
+import random
+from array import array
 
 
 def bagOfWords2VecMN(vocabList, inputSet):
@@ -26,6 +28,11 @@ def bagOfWords2VecMN(vocabList, inputSet):
 
 
 def textParse(bigString):  # input is big string, #output is word list
+    """
+    接收一个大字符串并将其解析成为字符串列表
+    :param bigString:
+    :return:
+    """
     # 去除标点符号
     listOfTokens = re.split(r'\W*', bigString)
     # 统一大小写 去空字符串
@@ -33,11 +40,15 @@ def textParse(bigString):  # input is big string, #output is word list
 
 
 def spamTest():
+    """
+    对贝叶斯垃圾邮件分类器进行自动化处理
+    :return:
+    """
     docList = []
     classList = []
     fullText = []
     for i in range(1, 26):
-        # 导入并解析文本文件
+        # 1. 导入并解析文本文件
         wordList = textParse(open('email/spam/%d.txt' % i).read())
         docList.append(wordList)
         fullText.append(wordList)
@@ -47,11 +58,28 @@ def spamTest():
         fullText.append(wordList)
         classList.append(0)
     vocabList = bayes.createVocabList(docList)
-    trainSet = range(50);
+    trainingSet = range(50)
     testSet = []
-
-    @todo没写完呢
+    for i in range(10):
+        # 2. 随机构建训练集
+        randIndex = int(random.uniform(0, len(trainingSet)))
+        testSet.append(trainingSet[randIndex])
+        del (trainingSet[randIndex])
+    trainMat = []
+    trainClasses = []
+    for docIndex in trainingSet:  # train the classifier (get probs) trainNB0
+        trainMat.append(bagOfWords2VecMN(vocabList, docList[docIndex]))
+        trainClasses.append(classList[docIndex])
+    p0V, p1V, pSpam = bayes.trainNB0(array(trainMat), array(trainClasses))
+    errorCount = 0
+    # 3. 对测试集分类
+    for docIndex in testSet:
+        wordVector = bayes.setOfWords2Vec(vocabList, docList[docIndex])
+        if bayes.classifyNB(array(wordVector), p0V, p1V, pSpam) != classList[docIndex]:
+            errorCount += 1
+    print 'the error rate is: ', float(errorCount) / len(testSet)
 
 
 if __name__ == '__main__':
+    spamTest()
     pass
