@@ -8,7 +8,7 @@
 @time: 17-12-12 下午8:26
 """
 from numpy import *
-
+import pprint
 
 def loadDataSet():
     postingList = [['my', 'dog', 'has', 'flea', 'problems', 'help', 'please'],

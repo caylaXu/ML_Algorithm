@@ -11,7 +11,8 @@
 import re
 import bayes
 import random
-from array import array
+from numpy import *
+import pprint
 
 
 def bagOfWords2VecMN(vocabList, inputSet):
@@ -23,9 +24,9 @@ def bagOfWords2VecMN(vocabList, inputSet):
     """
     returnVec = [0] * len(vocabList)
     for word in inputSet:
-        returnVec[vocabList.index(word)] += 1
+        if word in vocabList:
+            returnVec[vocabList.index(word)] += 1
     return returnVec
-
 
 def textParse(bigString):  # input is big string, #output is word list
     """
