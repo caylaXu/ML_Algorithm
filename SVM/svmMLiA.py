@@ -8,7 +8,6 @@ SMO 高效优化算法
 @time: 17-12-22 上午11:29
 """
 from numpy import *
-from time import sleep
 
 
 def loadDataSet(fileName):
@@ -183,12 +182,19 @@ def updateEk(oS, k):
 
 
 def innerL(i, oS):
+    """
+    完整Platt SMO算法中的优化例程
+    :param i:
+    :param oS:
+    :return:
+    """
     Ei = calcEk(oS, i)
     if ((oS.labelMat[i] * Ei < -oS.tol) and (oS.alphas[i] < oS.C)) or \
             ((oS.labelMat[i] * Ei > oS.tol) and (oS.alphas[i] > 0)):
+        # 1. 第二个alpha选择中的启发式方法
         j, Ej = selectJ(i, oS, Ei)
-        alphaIold = oS.alphas[i].copy
-        alphaJold = oS.alphas[j].copy
+        alphaIold = oS.alphas[i].copy()
+        alphaJold = oS.alphas[j].copy()
         if (oS.labelMat[i] != oS.labelMat[j]):
             L = max(0, oS.alphas[j] - oS.alphas[i])
             H = min(oS.C, oS.C + oS.alphas[j] - oS.alphas[i])
@@ -198,31 +204,101 @@ def innerL(i, oS):
         if L == H:
             print "L==H"
             return 0
-        eta = 2.0 * oS.X[i, :] * oS.X[j, :].T - oS.X[i, :].T - \
+        eta = 2.0 * oS.X[i, :] * oS.X[j, :].T - oS.X[i, :] * oS.X[i, :].T - \
               oS.X[j, :] * oS.X[j, :].T
-        if eta >= 0:
+        if (eta >= 0).all():
             print "eta>=0"
             return 0
         oS.alphas[j] -= oS.labelMat[j] * (Ei - Ej) / eta
         oS.alphas[j] = clipAlpha(oS.alphas[j], H, L)
+        # 2 更新缓存误差
         updateEk(oS, j)
         if (abs(oS.alphas[j] - alphaJold) < 0.00001):
             print "j not moving enough"
             return 0
         oS.alphas[i] += oS.labelMat[j] * oS.labelMat[i] * \
                         (alphaJold - oS.alphas[j])
+        # 2 更新缓存误差
         updateEk(oS, i)
         b1 = oS.b - Ei - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * \
-                         oS.X[i, :] * oS.X[i, :].T - oS.alphas[j] * \
-        #@todo 没写完呢
+                         oS.X[i, :] * oS.X[i, :].T - oS.labelMat[j] * \
+                                                     (oS.alphas[j] - alphaJold) * oS.X[i, :] * oS.X[j, :].T
+        b2 = oS.b - Ej - oS.labelMat[i] * (oS.alphas[i] - alphaIold) * \
+                         oS.X[i, :] * oS.X[j, :].T - oS.labelMat[j] * \
+                                                     (oS.alphas[j] - alphaJold) * oS.X[j, :] * oS.X[j, :].T
+        if (0 < oS.alphas[i]) and (oS.C > oS.alphas[i]):
+            oS.b = b1
+        elif (0 < oS.alphas[j]) and (oS.C > oS.alphas[j]):
+            oS.b = b2
+        else:
+            oS.b = (b1 + b2) / 2.0
+        return 1
+    else:
+        return 0
+
+
+def smoP(dataMatIn, classLabels, C, toler, maxIter, kTup=('lin', 0)):
+    oS = optStruct(mat(dataMatIn), mat(classLabels).transpose(), C, toler)
+    iter = 0
+    entireSet = True
+    alphaPairsChanged = 0
+    while (iter < maxIter) and ((alphaPairsChanged > 0) or (entireSet)):
+        alphaPairsChanged = 0
+        # 1. 遍历所有的值
+        if entireSet:
+            for i in range(oS.m):
+                alphaPairsChanged += innerL(i, oS)
+            print "fullSet, iter: %d i:%d, pairs changed %d" % (iter, i, alphaPairsChanged)
+            iter += 1
+        else:
+            # 2 遍历非边界值
+            nonBoundIs = nonzero((oS.alphas.A > 0) * (oS.alphas.A < C))[0]
+            for i in nonBoundIs:
+                alphaPairsChanged += innerL(i, oS)
+                print "non-bound, iter: %d i:%d, pairs changed %d" % \
+                      (iter, i, alphaPairsChanged)
+            iter += 1
+
+        if entireSet:
+            entireSet = False
+        elif (alphaPairsChanged == 0):
+            entireSet = True
+        print "iteration number: %d" % iter
+    return oS.b, oS.alphas
+
+
+def calcWs(alphas, dataArr, classLabels):
+    """
+    基于alpha值得到超平面
+    :param alphas:
+    :param dataArr:
+    :param classLabels:
+    :return:
+    """
+    X = mat(dataArr)
+    labelMat = mat(classLabels).transpose()
+    m, n = shape(X)
+    w = zeros((n, 1))
+    for i in range(m):
+        w += multiply(alphas[i] * labelMat[i], X[i, :].T)
+    return w
 
 
 if __name__ == '__main__':
-    # test smoSimple
+    # 1. test smoSimple
+    # dataArr, labelArr = loadDataSet('testSet.txt')
+    # b, alphas = smoSimple(dataArr, labelArr, 0.6, 0.001, 40)
+    # print(alphas[alphas > 0])
+    # print(shape(alphas[alphas > 0]))
+    # for i in range(100):
+    #     if alphas[i] > 0.0:
+    #         print dataArr[i], labelArr[i]
+
+    # 2. test smoP
     dataArr, labelArr = loadDataSet('testSet.txt')
-    b, alphas = smoSimple(dataArr, labelArr, 0.6, 0.001, 40)
-    print(alphas[alphas > 0])
-    print(shape(alphas[alphas > 0]))
-    for i in range(100):
-        if alphas[i] > 0.0:
-            print dataArr[i], labelArr[i]
+    b, alphas = smoP(dataArr, labelArr, 0.6, 0.001, 40)
+    ws = calcWs(alphas, dataArr, labelArr)
+    print(ws)
+    datMat = mat(dataArr)
+    print(datMat[0] * mat(ws) + b)
+    print(labelArr[0])
