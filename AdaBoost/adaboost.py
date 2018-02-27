@@ -111,7 +111,8 @@ def adaBoostTrainDS(dataArr, classLabels, numIt=40):
             break
     return weakClassArr
 
-def adaClassify(datToClass,classifierArr):
+
+def adaClassify(datToClass, classifierArr):
     """
     AdaBoost分类函数
     :param datToClass:
@@ -120,12 +121,12 @@ def adaClassify(datToClass,classifierArr):
     """
     dataMatrix = mat(datToClass)
     m = shape(dataMatrix)[0]
-    aggClassEst = mat(zeros((m,1)))
+    aggClassEst = mat(zeros((m, 1)))
     for i in range(len(classifierArr)):
-        classEst = stumpClassify(dataMatrix,classifierArr[i]['dim'],\
-                                 classifierArr[i]['thresh'],\
+        classEst = stumpClassify(dataMatrix, classifierArr[i]['dim'], \
+                                 classifierArr[i]['thresh'], \
                                  classifierArr[i]['ineq'])
-        aggClassEst += classifierArr[i]['alpha']*classEst
+        aggClassEst += classifierArr[i]['alpha'] * classEst
         print aggClassEst
     return sign(aggClassEst)
 
@@ -137,10 +138,5 @@ if __name__ == '__main__':
     # buildStump(datMat, classLabels, D)
 
     # test2 基于单层决策树的AdaBoost分类器
-    classifierArr = adaBoostTrainDS(datMat,classLabels,30)
-    adaClassify([0,0],classifierArr)
-
-
-
-
-
+    classifierArr = adaBoostTrainDS(datMat, classLabels, 30)
+    adaClassify([0, 0], classifierArr)
